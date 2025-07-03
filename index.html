@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-16">
+        <h1 class="text-4xl font-bold text-center mb-8">Voice Assistant</h1>
+        
+        <div class="max-w-md mx-auto bg-gray-800 rounded-xl shadow-md overflow-hidden p-6">
+            <div class="flex justify-center mb-8">
+                <button id="micButton" class="pulse bg-blue-600 hover:bg-blue-700 text-white rounded-full w-24 h-24 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <h2 class="text-xl font-semibold mb-2">Command Log</h2>
+                <div class="bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto" id="responseArea">
+                    <p class="text-gray-400">Press the microphone button and give a command...</p>
+                    <p class="text-blue-300 hidden" id="listeningText">Listening...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-center text-gray-400">
+            <p>Try commands like: "What time is it?" or "Search for artificial intelligence"</p>
+        </div>
+    </div>
+
+    <script>
+        const micButton = document.getElementById('micButton');
+        const responseArea = document.getElementById('responseArea');
+        const listeningText = document.getElementById('listeningText');
+        
+        micButton.addEventListener('click', async () => {
+            listeningText.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/voice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                listeningText.classList.add('hidden');
+                
+                if (data.error) {
+                    responseArea.innerHTML += `<p class="text-red-400">Error: ${data.error}</p>`;
+                } else {
+                    responseArea.innerHTML += `
+                        <div class="mb-2">
+                            <p class="text-green-400">You: ${data.query}</p>
+                            <p class="text-blue-300">Assistant: ${data.response}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                listeningText.classList.add('hidden');
+                responseArea.innerHTML += `<p class="text-red-400">Connection error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
